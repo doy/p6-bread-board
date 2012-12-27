@@ -1,9 +1,11 @@
 use v6;
 
+class Bread::Board::Container {...}
 class Bread::Board::Dependency {...}
 
 role Bread::Board::Service {
     has Str $.name;
+    has Bread::Board::Container $.parent is rw = Bread::Board::Container;
 
     # XXX not sure how to make these optional - specifying the types here
     # makes it fail when the parameters aren't passed
@@ -16,10 +18,11 @@ role Bread::Board::Service {
     method new (*%params is copy) {
         if %params.<dependencies> {
             my $deps = {};
-            for %params.<dependencies>.keys -> $dep {
-                $deps.{$dep} = Bread::Board::Dependency.new(
-                    service => %params.<dependencies>.{$dep},
-                );
+            for %params.<dependencies>.keys -> $name {
+                my $dep = %params.<dependencies>.{$name};
+                $deps.{$name} = $dep.isa(Bread::Board::Dependency)
+                    ?? $dep
+                    !! Bread::Board::Dependency.new(service => $dep);
             }
             %params.<dependencies> = $deps;
         }
@@ -119,5 +122,54 @@ class Bread::Board::Literal does Bread::Board::Service {
 
     method get {
         return $.value;
+    }
+}
+
+class Bread::Board::Container {
+    has Str $.name;
+    has Bread::Board::Container $.parent is rw = Bread::Board::Container;
+    # XXX again, as above
+    # has Hash of Bread::Board::Container $.sub_containers = {};
+    # has Hash of Bread::Board::Service $.services = {};
+    has $.sub_containers = {};
+    has $.services = {};
+
+    # XXX again, as above
+    method new (*%params is copy) {
+        if %params.<sub_containers>.isa(Array) {
+            %params.<sub_containers> = %params.<sub_containers>.map(-> $c { $c.name => $c }).hash;
+        }
+        if %params.<services>.isa(Array) {
+            %params.<services> = %params.<services>.map(-> $c { $c.name => $c }).hash;
+        }
+        my $container = callwith(|%params);
+        if %params.<sub_containers>:exists {
+            for %params.<sub_containers>.values -> $c {
+                $c.parent = $container;
+            }
+        }
+        if %params.<services>:exists {
+            for %params.<services>.values -> $c {
+                $c.parent = $container;
+            }
+        }
+        return $container;
+    }
+
+    method add_sub_container (Bread::Board::Container $c) {
+        $.sub_containers.{$c.name} = $c;
+        $c.parent = self;
+    }
+
+    method get_sub_container (Str $name) {
+        return $.sub_containers.{$name};
+    }
+
+    method has_services {
+        return $.services > 0;
+    }
+
+    method get_service (Str $name) {
+        return $.services.{$name};
     }
 }
