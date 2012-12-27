@@ -7,27 +7,9 @@ role Bread::Board::Service {
     has Str $.name;
     has Bread::Board::Container $.parent is rw = Bread::Board::Container;
 
-    # XXX not sure how to make these optional - specifying the types here
-    # makes it fail when the parameters aren't passed
-    # shouldn't the " = {}" part be taking care of that?
+    # TODO: typed hashes NYI
     # has Hash of Bread::Board::Dependency $.dependencies = {};
     has $.dependencies = {};
-
-    # XXX overriding new here is an extremely suboptimal solution
-    # does perl 6 have anything like moose's coercions?
-    method new (*%params is copy) {
-        if %params.<dependencies> {
-            my $deps = {};
-            for %params.<dependencies>.keys -> $name {
-                my $dep = %params.<dependencies>.{$name};
-                $deps.{$name} = $dep.isa(Bread::Board::Dependency)
-                    ?? $dep
-                    !! Bread::Board::Dependency.new(service => $dep);
-            }
-            %params.<dependencies> = $deps;
-        }
-        nextwith(|%params);
-    }
 
     method get {*};
 
@@ -37,9 +19,7 @@ role Bread::Board::Service {
 }
 
 role Bread::Board::HasParameters {
-    # XXX not sure how to make these optional - specifying the types here
-    # makes it fail when the parameters aren't passed
-    # shouldn't the " = {}" part be taking care of that?
+    # TODO: typed hashes NYI
     # has Hash of Hash $.parameters = {};
     has $.parameters = {};
 
@@ -59,7 +39,9 @@ role Bread::Board::HasParameters {
             }
         }
 
-        # XXX why is this return necessary?
+        # TODO: for loops are currently lazy, so won't get evaluated until
+        # something evaluates the return value if they are the last statement
+        # in a method. this may change in the future, because it's pretty weird
         return;
     }
 }
@@ -74,6 +56,21 @@ class Bread::Board::ConstructorInjection
 
     has $.class;
     has Str $.constructor_name is rw = 'new';
+
+    # TODO: type coercions NYI
+    method new (*%params is copy) {
+        if %params.<dependencies> {
+            my $deps = {};
+            for %params.<dependencies>.keys -> $name {
+                my $dep = %params.<dependencies>.{$name};
+                $deps.{$name} = $dep.isa(Bread::Board::Dependency)
+                    ?? $dep
+                    !! Bread::Board::Dependency.new(service => $dep);
+            }
+            %params.<dependencies> = $deps;
+        }
+        nextwith(|%params);
+    }
 
     method get (*%params is copy) {
         # XXX remove more duplication?
@@ -102,6 +99,21 @@ class Bread::Board::BlockInjection
     has Callable $.block;
     has $.class = Any;
 
+    # TODO: type coercions NYI
+    method new (*%params is copy) {
+        if %params.<dependencies> {
+            my $deps = {};
+            for %params.<dependencies>.keys -> $name {
+                my $dep = %params.<dependencies>.{$name};
+                $deps.{$name} = $dep.isa(Bread::Board::Dependency)
+                    ?? $dep
+                    !! Bread::Board::Dependency.new(service => $dep);
+            }
+            %params.<dependencies> = $deps;
+        }
+        nextwith(|%params);
+    }
+
     method get (*%params is copy) {
         # XXX remove more duplication?
         self.check_parameters(%params);
@@ -128,13 +140,13 @@ class Bread::Board::Literal does Bread::Board::Service {
 class Bread::Board::Container {
     has Str $.name;
     has Bread::Board::Container $.parent is rw = Bread::Board::Container;
-    # XXX again, as above
+    # TODO: typed hashes NYI'
     # has Hash of Bread::Board::Container $.sub_containers = {};
     # has Hash of Bread::Board::Service $.services = {};
     has $.sub_containers = {};
     has $.services = {};
 
-    # XXX again, as above
+    # TODO: type coercions NYI
     method new (*%params is copy) {
         if %params.<sub_containers>.isa(Array) {
             %params.<sub_containers> = %params.<sub_containers>.map(-> $c { $c.name => $c }).hash;
