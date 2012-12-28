@@ -30,8 +30,7 @@ my $c = container 'MyApp', {
     );
 };
 
-#my $logger = $c.resolve(service => 'logger');
-my $logger = $c.fetch('logger').get;
+my $logger = $c.resolve(service => 'logger');
 isa_ok($logger, FileLogger);
 is($logger.log_file, 'logfile.log');
 
