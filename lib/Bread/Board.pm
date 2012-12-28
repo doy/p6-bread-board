@@ -1,10 +1,12 @@
 use v6;
 
-class Bread::Board::Container {...}
-class Bread::Board::Dependency {...}
+module Bread::Board;
 
-role Bread::Board::Traversable {
-    has Bread::Board::Traversable $.parent is rw;
+class Container {...}
+class Dependency {...}
+
+role Traversable {
+    has Traversable $.parent is rw;
 
     method fetch (Str $path is copy) {
         # PERL6: substitutions don't return a useful value? # '
@@ -41,11 +43,11 @@ role Bread::Board::Traversable {
     method _fetch_single (Str $path) {...}
 }
 
-role Bread::Board::Service does Bread::Board::Traversable {
+role Service does Traversable {
     has Str $.name;
 
     # PERL6: typed hashes NYI
-    # has Hash of Bread::Board::Dependency $.dependencies = {};
+    # has Hash of Dependency $.dependencies = {};
     has $.dependencies = {};
 
     # PERL6: there doesn't appear to be any way for roles to do things at # '
@@ -80,7 +82,7 @@ role Bread::Board::Service does Bread::Board::Traversable {
     }
 }
 
-role Bread::Board::HasParameters {
+role HasParameters {
     # PERL6: typed hashes NYI
     # has Hash of Hash $.parameters = {};
     has $.parameters = {};
@@ -113,9 +115,9 @@ role Bread::Board::HasParameters {
     }
 }
 
-class Bread::Board::Dependency does Bread::Board::Traversable {
+class Dependency does Traversable {
     has Str $.service_path;
-    has Bread::Board::Service $.service handles 'get';
+    has Service $.service handles 'get';
 
     # XXX is this the best way to do this?
     # we can't do it at construction time, since $.parent doesn't get set
@@ -134,10 +136,7 @@ class Bread::Board::Dependency does Bread::Board::Traversable {
     }
 }
 
-class Bread::Board::ConstructorInjection
-    does Bread::Board::Service
-    does Bread::Board::HasParameters {
-
+class ConstructorInjection does Service does HasParameters {
     has $.class;
     has Str $.constructor_name is rw = 'new';
 
@@ -147,9 +146,9 @@ class Bread::Board::ConstructorInjection
             my $deps = {};
             for %params.<dependencies>.keys -> $name {
                 my $dep = %params.<dependencies>.{$name};
-                $deps.{$name} = $dep.isa(Bread::Board::Dependency)
+                $deps.{$name} = $dep.isa(Dependency)
                     ?? $dep
-                    !! Bread::Board::Dependency.new(service => $dep);
+                    !! Dependency.new(service => $dep);
             }
             %params.<dependencies> = $deps;
         }
@@ -169,7 +168,7 @@ class Bread::Board::ConstructorInjection
     }
 }
 
-class Bread::Board::Parameters {
+class Parameters {
     has Hash $.params;
     # XXX do we really want to keep this API? or should this really just be
     # the service object?
@@ -180,10 +179,7 @@ class Bread::Board::Parameters {
     }
 }
 
-class Bread::Board::BlockInjection
-    does Bread::Board::Service
-    does Bread::Board::HasParameters {
-
+class BlockInjection does Service does HasParameters {
     has Callable $.block;
     has $.class = Any;
 
@@ -193,9 +189,9 @@ class Bread::Board::BlockInjection
             my $deps = {};
             for %params.<dependencies>.keys -> $name {
                 my $dep = %params.<dependencies>.{$name};
-                $deps.{$name} = $dep.isa(Bread::Board::Dependency)
+                $deps.{$name} = $dep.isa(Dependency)
                     ?? $dep
-                    !! Bread::Board::Dependency.new(service => $dep);
+                    !! Dependency.new(service => $dep);
             }
             %params.<dependencies> = $deps;
         }
@@ -212,7 +208,7 @@ class Bread::Board::BlockInjection
             %params{$name} = $.dependencies{$name}.get;
         }
         return $.block.(
-            Bread::Board::Parameters.new(
+            Parameters.new(
                 params => %params,
                 class  => $.class,
             )
@@ -220,7 +216,7 @@ class Bread::Board::BlockInjection
     }
 }
 
-class Bread::Board::Literal does Bread::Board::Service {
+class Literal does Service {
     has $.value;
 
     method get {
@@ -228,11 +224,11 @@ class Bread::Board::Literal does Bread::Board::Service {
     }
 }
 
-class Bread::Board::Container does Bread::Board::Traversable {
+class Container does Traversable {
     has Str $.name;
     # PERL6: typed hashes NYI
-    # has Hash of Bread::Board::Container $.sub_containers = {};
-    # has Hash of Bread::Board::Service $.services = {};
+    # has Hash of Container $.sub_containers = {};
+    # has Hash of Service $.services = {};
     has $.sub_containers = {};
     has $.services = {};
 
@@ -258,7 +254,7 @@ class Bread::Board::Container does Bread::Board::Traversable {
         return $container;
     }
 
-    method add_sub_container (Bread::Board::Container $c) {
+    method add_sub_container (Container $c) {
         $.sub_containers.{$c.name} = $c;
         $c.parent = self;
     }
