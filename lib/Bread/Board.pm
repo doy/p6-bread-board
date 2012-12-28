@@ -451,4 +451,9 @@ sub wire_names (*@names) is export {
     return @names.map(-> $name { $name => depends_on($name) }).hash;
 }
 
+sub include (Str $path) is export {
+    my $contents = slurp $path;
+    eval $contents;
+}
+
 # vim:ft=perl6:foldmethod=manual
