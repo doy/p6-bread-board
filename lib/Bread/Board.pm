@@ -77,7 +77,7 @@ role HasDependencies {
         return;
     }
 
-    method get_dependency ($name) {
+    method get_dependency (Str $name) {
         return $.dependencies.{$name};
     }
 
