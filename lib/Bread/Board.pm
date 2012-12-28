@@ -85,7 +85,8 @@ class Bread::Board::ConstructorInjection
 
 class Bread::Board::Parameters {
     has Hash $.params;
-    # XXX do we really want to keep this API?
+    # XXX do we really want to keep this API? or should this really just be
+    # the service object?
     has $.class;
 
     method param (Str $name) {
