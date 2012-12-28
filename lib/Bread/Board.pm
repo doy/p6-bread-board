@@ -168,6 +168,12 @@ class ConstructorInjection does Service does HasParameters does HasDependencies 
     # PERL6: type coercions NYI
     method new (*%params is copy) {
         if %params.<dependencies> {
+            if %params.<dependencies> ~~ Array {
+                %params.<dependencies> = %params.<dependencies>.map(-> $dep {
+                    $dep.service_path.split('/').[*-1] => $dep
+                }).hash;
+            }
+
             my $deps = {};
             for %params.<dependencies>.keys -> $name {
                 my $dep = %params.<dependencies>.{$name};
@@ -227,6 +233,12 @@ class BlockInjection does Service does HasParameters does HasDependencies {
     # PERL6: type coercions NYI
     method new (*%params is copy) {
         if %params.<dependencies> {
+            if %params.<dependencies> ~~ Array {
+                %params.<dependencies> = %params.<dependencies>.map(-> $dep {
+                    $dep.service_path.split('/').[*-1] => $dep
+                }).hash;
+            }
+
             my $deps = {};
             for %params.<dependencies>.keys -> $name {
                 my $dep = %params.<dependencies>.{$name};
