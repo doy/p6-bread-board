@@ -39,9 +39,10 @@ role Bread::Board::HasParameters {
             }
         }
 
-        # TODO: for loops are currently lazy, so won't get evaluated until
+        # TODO: for loops are currently lazy, so won't get evaluated until # '
         # something evaluates the return value if they are the last statement
-        # in a method. this may change in the future, because it's pretty weird
+        # in a method. this may change in the future, because it's pretty # '
+        # weird
         return;
     }
 }
@@ -140,7 +141,7 @@ class Bread::Board::Literal does Bread::Board::Service {
 class Bread::Board::Container {
     has Str $.name;
     has Bread::Board::Container $.parent is rw = Bread::Board::Container;
-    # TODO: typed hashes NYI'
+    # TODO: typed hashes NYI
     # has Hash of Bread::Board::Container $.sub_containers = {};
     # has Hash of Bread::Board::Service $.services = {};
     has $.sub_containers = {};
