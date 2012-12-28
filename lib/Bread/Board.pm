@@ -356,6 +356,34 @@ class Container does Traversable {
     method resolve (Str :$service) {
         return self.fetch($service).get;
     }
+
+    method gist (:$indent = 0) {
+        my $spaces = " " x $indent;
+        my $str = "{$spaces}{$.name // '???'} \{\n";
+
+        for $.sub_containers.values -> $c {
+            $str ~= $c.gist(indent => $indent + 2);
+        }
+
+        for $.services.values -> $s {
+            $str ~= "$spaces  {$s.name // '???'}\n";
+            if ($s ~~ HasDependencies) {
+                for $s.dependencies.kv -> $dep_name, $dep {
+                    $str ~= "$spaces    $dep_name\: {$dep.service_path // '???'}\n";
+                }
+            }
+            if ($s ~~ HasParameters) {
+                for $s.parameters.keys -> $param_name {
+                    $str ~= "$spaces    !$param_name\n";
+                }
+            }
+
+        }
+
+        $str ~= "$spaces\}\n";
+
+        return $str;
+    }
 }
 
 role Singleton does Lifecycle is export {
