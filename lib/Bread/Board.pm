@@ -7,7 +7,7 @@ role Bread::Board::Traversable {
     has Bread::Board::Traversable $.parent is rw;
 
     method fetch (Str $path is copy) {
-        # TODO substitutions don't return a useful value? # '
+        # PERL6: substitutions don't return a useful value? # '
         # if $path ~~ s/^ \/ // {
         if $path ~~ m[^ '/' ] {
             $path ~~ s[^ '/' ] = '';
@@ -44,11 +44,11 @@ role Bread::Board::Traversable {
 role Bread::Board::Service does Bread::Board::Traversable {
     has Str $.name;
 
-    # TODO: typed hashes NYI
+    # PERL6: typed hashes NYI
     # has Hash of Bread::Board::Dependency $.dependencies = {};
     has $.dependencies = {};
 
-    # XXX there doesn't appear to be any way for roles to do things at # '
+    # PERL6: there doesn't appear to be any way for roles to do things at # '
     # construction time without breaking things - so, just call this method
     # in the constructor of all classes that use this role manually
     method _set_dependency_parents {
@@ -56,7 +56,7 @@ role Bread::Board::Service does Bread::Board::Traversable {
             $dep.parent = self;
         }
 
-        # TODO: for loops are currently lazy, so won't get evaluated until # '
+        # PERL6: for loops are currently lazy, so won't get evaluated until # '
         # something evaluates the return value if they are the last statement
         # in a method. this may change in the future, because it's pretty # '
         # weird
@@ -81,7 +81,7 @@ role Bread::Board::Service does Bread::Board::Traversable {
 }
 
 role Bread::Board::HasParameters {
-    # TODO: typed hashes NYI
+    # PERL6: typed hashes NYI
     # has Hash of Hash $.parameters = {};
     has $.parameters = {};
 
@@ -105,7 +105,7 @@ role Bread::Board::HasParameters {
             }
         }
 
-        # TODO: for loops are currently lazy, so won't get evaluated until # '
+        # PERL6: for loops are currently lazy, so won't get evaluated until # '
         # something evaluates the return value if they are the last statement
         # in a method. this may change in the future, because it's pretty # '
         # weird
@@ -141,7 +141,7 @@ class Bread::Board::ConstructorInjection
     has $.class;
     has Str $.constructor_name is rw = 'new';
 
-    # TODO: type coercions NYI
+    # PERL6: type coercions NYI
     method new (*%params is copy) {
         if %params.<dependencies> {
             my $deps = {};
@@ -187,7 +187,7 @@ class Bread::Board::BlockInjection
     has Callable $.block;
     has $.class = Any;
 
-    # TODO: type coercions NYI
+    # PERL6: type coercions NYI
     method new (*%params is copy) {
         if %params.<dependencies> {
             my $deps = {};
@@ -230,13 +230,13 @@ class Bread::Board::Literal does Bread::Board::Service {
 
 class Bread::Board::Container does Bread::Board::Traversable {
     has Str $.name;
-    # TODO: typed hashes NYI
+    # PERL6: typed hashes NYI
     # has Hash of Bread::Board::Container $.sub_containers = {};
     # has Hash of Bread::Board::Service $.services = {};
     has $.sub_containers = {};
     has $.services = {};
 
-    # TODO: type coercions NYI
+    # PERL6: type coercions NYI
     method new (*%params is copy) {
         if %params.<sub_containers>.isa(Array) {
             %params.<sub_containers> = %params.<sub_containers>.map(-> $c { $c.name => $c }).hash;
