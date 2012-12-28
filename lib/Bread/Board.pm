@@ -136,13 +136,16 @@ role HasParameters {
 
 class Dependency does Traversable {
     has Str $.service_path;
-    has Service $.service handles 'get';
+    has Service $.service;
 
     # XXX is this the best way to do this?
     # we can't do it at construction time, since $.parent doesn't get set
     # until the current object is completely constructed
-    method service {
-        $!service //= self.fetch($.service_path);
+    method service handles 'get' {
+        # PERL6: // is broken on role type objects
+        #$!service //= self.fetch($.service_path);
+        $!service = self.fetch($.service_path)
+            unless $!service.defined;
         return $!service;
     }
 
