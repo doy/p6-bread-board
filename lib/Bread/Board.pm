@@ -26,7 +26,10 @@ role Traversable {
         return $root;
     }
 
-    method get_enclosing_container {...}
+    # PERL6: doing anything at all with the type object for a role with
+    # required methods is broken
+    #method get_enclosing_container {...}
+    method get_enclosing_container {}
 
     method _fetch (Str $path) {
         return self if $path eq '';
@@ -40,13 +43,19 @@ role Traversable {
         return self._fetch_single(@parts[0])._fetch($rest);
     }
 
-    method _fetch_single (Str $path) {...}
+    # PERL6: doing anything at all with the type object for a role with
+    # required methods is broken
+    #method _fetch_single (Str $path) {...}
+    method _fetch_single (Str $path) {}
 }
 
 role Service does Traversable {
     has Str $.name;
 
-    method get {...}
+    # PERL6: doing anything at all with the type object for a role with
+    # required methods is broken
+    #method get {...}
+    method get {}
 
     method get_enclosing_container {
         return $.parent;
