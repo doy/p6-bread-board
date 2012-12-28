@@ -3,7 +3,7 @@ use Test;
 
 use Bread::Board;
 
-my $DIR = $?FILE.split('/')[0..*-2].join('/');
+my $DIR = $*PROGRAM_NAME.split('/')[0..*-2].join('/');
 
 sub like ($str, Regex $rx, $reason = '') {
     ok($str ~~ $rx, $reason);
