@@ -46,6 +46,18 @@ role Traversable {
 role Service does Traversable {
     has Str $.name;
 
+    method get {...}
+
+    method get_enclosing_container {
+        return $.parent;
+    }
+
+    method _fetch_single (Str $name) {
+        die "Couldn't find $name in $.name";
+    }
+}
+
+role HasDependencies {
     # PERL6: typed hashes NYI
     # has Hash of Dependency $.dependencies = {};
     has $.dependencies = {};
@@ -65,18 +77,11 @@ role Service does Traversable {
         return;
     }
 
-    method get {...}
-
     method get_dependency ($name) {
         return $.dependencies.{$name};
     }
 
-    method get_enclosing_container {
-        return $.parent;
-    }
-
     method _fetch_single (Str $name) {
-        # XXX parameters?
         return self.get_dependency($name)
             // die "No dependency $name found for $.name";
     }
@@ -113,6 +118,11 @@ role HasParameters {
         # weird
         return;
     }
+
+    method _fetch_single (Str $name) {
+        return self.get_parameter($name)
+            // die "No parameter $name found for $.name";
+    }
 }
 
 class Dependency does Traversable {
@@ -136,7 +146,7 @@ class Dependency does Traversable {
     }
 }
 
-class ConstructorInjection does Service does HasParameters {
+class ConstructorInjection does Service does HasParameters does HasDependencies {
     has $.class;
     has Str $.constructor_name is rw = 'new';
 
@@ -166,6 +176,17 @@ class ConstructorInjection does Service does HasParameters {
         }
         return $.class."$.constructor_name"(|%params);
     }
+
+    method _fetch_single (Str $name) {
+        # PERL6: self.Role::method calls the method with the role type object
+        # as the invocant, rather than self
+        #return try { self.HasDependencies::_fetch_single($name) }
+        #    // try { self.HasParameters::_fetch_single($name) }
+        #    // die "Couldn't find dependency or parameter $name in $.name";
+        return self.get_dependency($name)
+            // self.get_parameter($name)
+            // die "Couldn't find dependency or parameter $name in $.name";
+    }
 }
 
 class Parameters {
@@ -179,7 +200,7 @@ class Parameters {
     }
 }
 
-class BlockInjection does Service does HasParameters {
+class BlockInjection does Service does HasParameters does HasDependencies {
     has Callable $.block;
     has $.class = Any;
 
@@ -213,6 +234,17 @@ class BlockInjection does Service does HasParameters {
                 class  => $.class,
             )
         );
+    }
+
+    method _fetch_single (Str $name) {
+        # PERL6: self.Role::method calls the method with the role type object
+        # as the invocant, rather than self
+        #return try { self.HasDependencies::_fetch_single($name) }
+        #    // try { self.HasParameters::_fetch_single($name) }
+        #    // die "Couldn't find dependency or parameter $name in $.name";
+        return self.get_dependency($name)
+            // self.get_parameter($name)
+            // die "Couldn't find dependency or parameter $name in $.name";
     }
 }
 
