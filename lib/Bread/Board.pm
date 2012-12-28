@@ -5,6 +5,8 @@ module Bread::Board;
 class Container {...}
 class Dependency {...}
 
+role Lifecycle { }
+
 role Traversable {
     has Traversable $.parent is rw;
 
@@ -51,6 +53,7 @@ role Traversable {
 
 role Service does Traversable {
     has Str $.name;
+    has $.lifecycle;
 
     # PERL6: doing anything at all with the type object for a role with
     # required methods is broken
@@ -175,8 +178,13 @@ class ConstructorInjection does Service does HasParameters does HasDependencies 
             %params.<dependencies> = $deps;
         }
         my $self = callwith(|%params);
+
         # XXX see above
         $self._set_dependency_parents;
+
+        $self does $self.lifecycle
+            if $self.lifecycle ~~ Lifecycle;
+
         return $self;
     }
 
@@ -229,8 +237,13 @@ class BlockInjection does Service does HasParameters does HasDependencies {
             %params.<dependencies> = $deps;
         }
         my $self = callwith(|%params);
+
         # XXX see above
         $self._set_dependency_parents;
+
+        $self does $self.lifecycle
+            if $self.lifecycle ~~ Lifecycle;
+
         return $self;
     }
 
@@ -307,6 +320,11 @@ class Container does Traversable {
         return $.sub_containers.{$name};
     }
 
+    method add_service (Service $s) {
+        $.services.{$s.name} = $s;
+        $s.parent = self;
+    }
+
     method has_services {
         return $.services > 0;
     }
@@ -322,6 +340,82 @@ class Container does Traversable {
             // self.get_service($name)
             // die "Couldn't find service or container for $name in $.name";
     }
+
+    method resolve (Str :$service) {
+        return self.fetch($service).get;
+    }
+}
+
+role Singleton does Lifecycle is export {
+    has $!instance;
+    has Bool $!has_instance;
+
+    method get {
+        if !$!has_instance {
+            $!instance = callsame;
+            $!has_instance = True;
+        }
+        return $!instance;
+    }
+}
+
+our $CC;
+
+proto container is export {*}
+multi container (Container $c, Callable $body) {
+    $CC.add_sub_container($c)
+        if $CC;
+    temp $CC = $c;
+    $body.();
+    $c;
+}
+multi container (Str $name, Callable $body) {
+    container(Container.new(name => $name), $body);
+}
+multi container (Callable $body) {
+    container(Container.new, $body);
+}
+
+sub depends_on (Str $path) is export {
+    Dependency.new(service_path => $path);
+}
+
+proto service is export {*}
+multi service (*%params) {
+    my $service;
+
+    if (%params.<value>:exists) {
+        $service = Literal.new(|%params);
+    }
+    elsif (%params.<block>:exists) {
+        $service = BlockInjection.new(|%params);
+    }
+    elsif (%params.<class>:exists) {
+        $service = ConstructorInjection.new(|%params);
+    }
+    else {
+        die "Couldn't create a service from {%params}";
+    }
+
+    $CC.add_service($service)
+        if $CC;
+
+    return $service;
+}
+multi service (Str $name, *%params) {
+    service(name => $name, |%params);
+}
+multi service (Any $value) {
+    service(value => $value);
+}
+multi service (Str $name, Any $value) {
+    service(name => $name, value => $value);
+}
+multi service (Str $name, Parcel $params) {
+    service(name => $name, |$params.hash);
+}
+multi service (Parcel $params) {
+    service(|$params.hash);
 }
 
 # vim:ft=perl6:foldmethod=manual
