@@ -360,19 +360,36 @@ role Singleton does Lifecycle is export {
 }
 
 our $CC;
+our $in_container = False;
+
+our sub set_root_container (Container $c) {
+    die "Can't set the root container when we're already in a container"
+        if $in_container;
+    $CC = $c;
+}
 
 proto container is export {*}
-multi container (Container $c, Callable $body) {
+multi container (Container $c, Callable $body = sub {}) {
     $CC.add_sub_container($c)
         if $CC;
-    temp $CC = $c;
-    $body.();
+    # PERL6: temp doesn't work properly in multisubs
+    #temp $CC = $c;
+    #temp $in_container = True;
+    #$body.();
+    my $old_CC = $CC;
+    my $old_in_container = $in_container;
+    $CC = $c;
+    $in_container = True;
+    {
+        LEAVE { $CC = $old_CC; $in_container = $old_in_container };
+        $body.();
+    }
     $c;
 }
-multi container (Str $name, Callable $body) {
+multi container (Str $name, Callable $body = sub {}) {
     container(Container.new(name => $name), $body);
 }
-multi container (Callable $body) {
+multi container (Callable $body = sub {}) {
     container(Container.new, $body);
 }
 
