@@ -447,4 +447,8 @@ multi service (Parcel $params) {
     service(|$params.hash);
 }
 
+sub wire_names (*@names) is export {
+    return @names.map(-> $name { $name => depends_on($name) }).hash;
+}
+
 # vim:ft=perl6:foldmethod=manual
