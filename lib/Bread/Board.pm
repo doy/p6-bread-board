@@ -384,7 +384,7 @@ proto container is export {*}
 multi container (Container $c, Callable $body = sub {}) {
     $CC.add_sub_container($c)
         if $CC;
-    # PERL6: temp doesn't work properly in multisubs
+    # PERL6: temp doesn't work properly in multisubs # '
     #temp $CC = $c;
     #temp $in_container = True;
     #$body.();
