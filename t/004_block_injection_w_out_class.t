@@ -3,7 +3,10 @@ use Test;
 
 use Bread::Board;
 
-sub does_ok(Mu $var, Mu $type, $msg = ("The object does '" ~ $type.perl ~ "'")) {
+# TODO: doing anything at all with the type object for a role with required
+# methods is broken
+#sub does_ok(Mu $var, Mu $type, $msg = ("The object does '" ~ $type.perl ~ "'")) {
+sub does_ok(Mu $var, Mu $type, $msg = ("The object does [some role]")) {
     ok($var.does($type), $msg);
 }
 

@@ -24,7 +24,7 @@ role Bread::Board::Traversable {
         return $root;
     }
 
-    method get_enclosing_container {*}
+    method get_enclosing_container {...}
 
     method _fetch (Str $path) {
         return self if $path eq '';
@@ -38,7 +38,7 @@ role Bread::Board::Traversable {
         return self._fetch_single(@parts[0])._fetch($rest);
     }
 
-    method _fetch_single (Str $path) {*}
+    method _fetch_single (Str $path) {...}
 }
 
 role Bread::Board::Service does Bread::Board::Traversable {
@@ -63,7 +63,7 @@ role Bread::Board::Service does Bread::Board::Traversable {
         return;
     }
 
-    method get {*};
+    method get {...}
 
     method get_dependency ($name) {
         return $.dependencies.{$name};
