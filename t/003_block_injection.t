@@ -81,3 +81,5 @@ class Addict {
 }
 
 done;
+
+# vim:ft=perl6:foldmethod=manual

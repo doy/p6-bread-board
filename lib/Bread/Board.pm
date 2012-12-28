@@ -186,3 +186,5 @@ class Bread::Board::Container {
         return $.services.{$name};
     }
 }
+
+# vim:ft=perl6:foldmethod=manual

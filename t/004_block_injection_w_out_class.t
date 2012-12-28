@@ -23,3 +23,5 @@ isa_ok($x, Hash);
 is_deeply($x, { foo => 'FOO' });
 
 done;
+
+# vim:ft=perl6:foldmethod=manual
