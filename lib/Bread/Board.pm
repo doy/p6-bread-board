@@ -406,14 +406,19 @@ class Container does Traversable {
 
 role Singleton does Lifecycle is export {
     has $!instance;
-    has Bool $!has_instance;
+    has Bool $.has_instance;
 
     method get {
-        if !$!has_instance {
+        if !$.has_instance {
             $!instance = callsame;
             $!has_instance = True;
         }
         return $!instance;
+    }
+
+    method flush_instance {
+        $!instance = Any;
+        $!has_instance = False;
     }
 }
 
