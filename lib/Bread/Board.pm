@@ -170,7 +170,16 @@ class ConstructorInjection does Service does HasParameters does HasDependencies 
         if %params.<dependencies> {
             if %params.<dependencies> ~~ Array {
                 %params.<dependencies> = %params.<dependencies>.map(-> $dep {
-                    $dep.service_path.split('/').[*-1] => $dep
+                    my ($name, $obj);
+                    if ($dep ~~ Dependency) {
+                        $name = $dep.service_path.split('/').[*-1];
+                        $obj  = $dep;
+                    }
+                    else {
+                        $name = $dep.split('/').[*-1];
+                        $obj  = Dependency.new(service_path => $dep);
+                    }
+                    $name => $obj
                 }).hash;
             }
 
@@ -235,7 +244,16 @@ class BlockInjection does Service does HasParameters does HasDependencies {
         if %params.<dependencies> {
             if %params.<dependencies> ~~ Array {
                 %params.<dependencies> = %params.<dependencies>.map(-> $dep {
-                    $dep.service_path.split('/').[*-1] => $dep
+                    my ($name, $obj);
+                    if ($dep ~~ Dependency) {
+                        $name = $dep.service_path.split('/').[*-1];
+                        $obj  = $dep;
+                    }
+                    else {
+                        $name = $dep.split('/').[*-1];
+                        $obj  = Dependency.new(service_path => $dep);
+                    }
+                    $name => $obj
                 }).hash;
             }
 
