@@ -28,10 +28,7 @@ role Traversable {
         return $root;
     }
 
-    # PERL6: doing anything at all with the type object for a role with
-    # required methods is broken
-    #method get_enclosing_container {...}
-    method get_enclosing_container {}
+    method get_enclosing_container {...}
 
     method _fetch (Str $path) {
         return self if $path eq '';
@@ -45,20 +42,14 @@ role Traversable {
         return self._fetch_single(@parts[0])._fetch($rest);
     }
 
-    # PERL6: doing anything at all with the type object for a role with
-    # required methods is broken
-    #method _fetch_single (Str $path) {...}
-    method _fetch_single (Str $path) {}
+    method _fetch_single (Str $path) {...}
 }
 
 role Service does Traversable {
     has Str $.name;
     has $.lifecycle;
 
-    # PERL6: doing anything at all with the type object for a role with
-    # required methods is broken
-    #method get {...}
-    method get {}
+    method get {...}
 
     method get_enclosing_container {
         return $.parent;
@@ -146,9 +137,11 @@ class Dependency does Traversable {
     # until the current object is completely constructed
     method service handles 'get' {
         # PERL6: // is broken on role type objects
+        # PERL6: also, have to use .DEFINITE instead of defined because calling
+        # most methods on role type objects with required methods blows up
         #$!service //= self.fetch($.service_path);
         $!service = self.fetch($.service_path)
-            unless $!service.defined;
+            unless $!service.DEFINITE;
         return $!service;
     }
 
