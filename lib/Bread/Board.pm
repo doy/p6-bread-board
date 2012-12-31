@@ -141,7 +141,8 @@ role HasParameters {
                 die "Unknown parameter $name given";
             }
             if not %params{$name}.isa($.parameters{$name}<isa>) {
-                die "{%params{$name}.perl} is not a valid value for the $name parameter";
+                die "{%params{$name}.perl} is not a valid value "
+                  ~ "for the $name parameter";
             }
         }
 
@@ -188,6 +189,17 @@ class Dependency does Traversable {
     }
 }
 
+class Parameters {
+    has Hash $.params;
+    # XXX do we really want to keep this API? or should this really just be
+    # the service object?
+    has $.class;
+
+    method param (Str $name) {
+        return $.params{$name};
+    }
+}
+
 class ConstructorInjection does Service does HasParameters does HasDependencies does HasClass {
     has Str $.constructor_name is rw = 'new';
 
@@ -226,17 +238,6 @@ class ConstructorInjection does Service does HasParameters does HasDependencies 
         return self.get_dependency($name)
             // self.get_parameter($name)
             // die "Couldn't find dependency or parameter $name in $.name";
-    }
-}
-
-class Parameters {
-    has Hash $.params;
-    # XXX do we really want to keep this API? or should this really just be
-    # the service object?
-    has $.class;
-
-    method param (Str $name) {
-        return $.params{$name};
     }
 }
 
@@ -305,10 +306,14 @@ class Container does Traversable {
     # PERL6: type coercions NYI
     method new (*%params is copy) {
         if %params<sub_containers>.isa(Array) {
-            %params<sub_containers> = %params<sub_containers>.map(-> $c { $c.name => $c }).hash;
+            %params<sub_containers> = %params<sub_containers>.map(
+                -> $c { $c.name => $c }
+            ).hash;
         }
         if %params<services>.isa(Array) {
-            %params<services> = %params<services>.map(-> $c { $c.name => $c }).hash;
+            %params<services> = %params<services>.map(
+                -> $c { $c.name => $c }
+            ).hash;
         }
         my $container = callwith(|%params);
         if %params<sub_containers>:exists {
@@ -370,7 +375,8 @@ class Container does Traversable {
             $str ~= "$spaces  {$s.name // '???'}\n";
             if ($s ~~ HasDependencies) {
                 for $s.dependencies.kv -> $dep_name, $dep {
-                    $str ~= "$spaces    $dep_name\: {$dep.service_path // '???'}\n";
+                    $str ~= "$spaces    $dep_name\: "
+                          ~ "{$dep.service_path // '???'}\n";
                 }
             }
             if ($s ~~ HasParameters) {
