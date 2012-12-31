@@ -87,8 +87,8 @@ role HasDependencies {
 
         my $ret = {};
         for $deps.keys -> $name {
-            my $dep = $deps.{$name};
-            $ret.{$name} = $dep.isa(Dependency)
+            my $dep = $deps{$name};
+            $ret{$name} = $dep.isa(Dependency)
                 ?? $dep
                 !! Dependency.new(service => $dep);
         }
@@ -111,7 +111,7 @@ role HasDependencies {
     }
 
     method get_dependency (Str $name) {
-        return $.dependencies.{$name};
+        return $.dependencies{$name};
     }
 
     method _fetch_single (Str $name) {
@@ -126,22 +126,22 @@ role HasParameters {
     has $.parameters = {};
 
     method get_parameter (Str $name) {
-        return $.parameters.{$name};
+        return $.parameters{$name};
     }
 
     method check_parameters (%params) {
         for $.parameters.keys -> $name {
-            if not %params.{$name}:exists {
+            if not %params{$name}:exists {
                 die "Required parameter $name not given";
             }
         }
 
         for %params.keys -> $name {
-            if not $.parameters.{$name}:exists {
+            if not $.parameters{$name}:exists {
                 die "Unknown parameter $name given";
             }
-            if not %params.{$name}.isa($.parameters.{$name}.<isa>) {
-                die "{%params.{$name}.perl} is not a valid value for the $name parameter";
+            if not %params{$name}.isa($.parameters{$name}<isa>) {
+                die "{%params{$name}.perl} is not a valid value for the $name parameter";
             }
         }
 
@@ -192,9 +192,9 @@ class ConstructorInjection does Service does HasParameters does HasDependencies 
     has Str $.constructor_name is rw = 'new';
 
     method new (*%params is copy) {
-        if my $deps = %params.<dependencies> {
+        if my $deps = %params<dependencies> {
             # PERL6: type coercions NYI
-            %params.<dependencies> = self._coerce_dependencies($deps);
+            %params<dependencies> = self._coerce_dependencies($deps);
         }
 
         my $self = callwith(|%params);
@@ -236,7 +236,7 @@ class Parameters {
     has $.class;
 
     method param (Str $name) {
-        return $.params.{$name};
+        return $.params{$name};
     }
 }
 
@@ -244,9 +244,9 @@ class BlockInjection does Service does HasParameters does HasDependencies does H
     has Callable $.block;
 
     method new (*%params is copy) {
-        if my $deps = %params.<dependencies> {
+        if my $deps = %params<dependencies> {
             # PERL6: type coercions NYI
-            %params.<dependencies> = self._coerce_dependencies($deps);
+            %params<dependencies> = self._coerce_dependencies($deps);
         }
 
         my $self = callwith(|%params);
@@ -304,20 +304,20 @@ class Container does Traversable {
 
     # PERL6: type coercions NYI
     method new (*%params is copy) {
-        if %params.<sub_containers>.isa(Array) {
-            %params.<sub_containers> = %params.<sub_containers>.map(-> $c { $c.name => $c }).hash;
+        if %params<sub_containers>.isa(Array) {
+            %params<sub_containers> = %params<sub_containers>.map(-> $c { $c.name => $c }).hash;
         }
-        if %params.<services>.isa(Array) {
-            %params.<services> = %params.<services>.map(-> $c { $c.name => $c }).hash;
+        if %params<services>.isa(Array) {
+            %params<services> = %params<services>.map(-> $c { $c.name => $c }).hash;
         }
         my $container = callwith(|%params);
-        if %params.<sub_containers>:exists {
-            for %params.<sub_containers>.values -> $c {
+        if %params<sub_containers>:exists {
+            for %params<sub_containers>.values -> $c {
                 $c.parent = $container;
             }
         }
-        if %params.<services>:exists {
-            for %params.<services>.values -> $c {
+        if %params<services>:exists {
+            for %params<services>.values -> $c {
                 $c.parent = $container;
             }
         }
@@ -325,16 +325,16 @@ class Container does Traversable {
     }
 
     method add_sub_container (Container $c) {
-        $.sub_containers.{$c.name} = $c;
+        $.sub_containers{$c.name} = $c;
         $c.parent = self;
     }
 
     method get_sub_container (Str $name) {
-        return $.sub_containers.{$name};
+        return $.sub_containers{$name};
     }
 
     method add_service (Service $s) {
-        $.services.{$s.name} = $s;
+        $.services{$s.name} = $s;
         $s.parent = self;
     }
 
@@ -343,7 +343,7 @@ class Container does Traversable {
     }
 
     method get_service (Str $name) {
-        return $.services.{$name};
+        return $.services{$name};
     }
 
     method get_enclosing_container { self }
@@ -447,13 +447,13 @@ proto service is export {*}
 multi service (*%params) {
     my $service;
 
-    if (%params.<value>:exists) {
+    if (%params<value>:exists) {
         $service = Literal.new(|%params);
     }
-    elsif (%params.<block>:exists) {
+    elsif (%params<block>:exists) {
         $service = BlockInjection.new(|%params);
     }
-    elsif (%params.<class>:exists) {
+    elsif (%params<class>:exists) {
         $service = ConstructorInjection.new(|%params);
     }
     else {
