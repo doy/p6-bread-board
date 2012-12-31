@@ -68,6 +68,33 @@ role HasDependencies {
     # has Hash of Dependency $.dependencies = {};
     has $.dependencies = {};
 
+    # PERL6: type coercions NYI
+    method _coerce_dependencies ($deps is copy) {
+        if $deps ~~ Array {
+            $deps = $deps.map(-> $dep {
+                my ($name, $obj);
+                if ($dep ~~ Dependency) {
+                    $name = $dep.service_path.split('/').[*-1];
+                    $obj  = $dep;
+                }
+                else {
+                    $name = $dep.split('/').[*-1];
+                    $obj  = Dependency.new(service_path => $dep);
+                }
+                $name => $obj
+            }).hash;
+        }
+
+        my $ret = {};
+        for $deps.keys -> $name {
+            my $dep = $deps.{$name};
+            $ret.{$name} = $dep.isa(Dependency)
+                ?? $dep
+                !! Dependency.new(service => $dep);
+        }
+        return $ret;
+    }
+
     # PERL6: there doesn't appear to be any way for roles to do things at # '
     # construction time without breaking things - so, just call this method
     # in the constructor of all classes that use this role manually
@@ -164,33 +191,12 @@ class Dependency does Traversable {
 class ConstructorInjection does Service does HasParameters does HasDependencies does HasClass {
     has Str $.constructor_name is rw = 'new';
 
-    # PERL6: type coercions NYI
     method new (*%params is copy) {
-        if %params.<dependencies> {
-            if %params.<dependencies> ~~ Array {
-                %params.<dependencies> = %params.<dependencies>.map(-> $dep {
-                    my ($name, $obj);
-                    if ($dep ~~ Dependency) {
-                        $name = $dep.service_path.split('/').[*-1];
-                        $obj  = $dep;
-                    }
-                    else {
-                        $name = $dep.split('/').[*-1];
-                        $obj  = Dependency.new(service_path => $dep);
-                    }
-                    $name => $obj
-                }).hash;
-            }
-
-            my $deps = {};
-            for %params.<dependencies>.keys -> $name {
-                my $dep = %params.<dependencies>.{$name};
-                $deps.{$name} = $dep.isa(Dependency)
-                    ?? $dep
-                    !! Dependency.new(service => $dep);
-            }
-            %params.<dependencies> = $deps;
+        if my $deps = %params.<dependencies> {
+            # PERL6: type coercions NYI
+            %params.<dependencies> = self._coerce_dependencies($deps);
         }
+
         my $self = callwith(|%params);
 
         # XXX see above
@@ -237,33 +243,12 @@ class Parameters {
 class BlockInjection does Service does HasParameters does HasDependencies does HasClass {
     has Callable $.block;
 
-    # PERL6: type coercions NYI
     method new (*%params is copy) {
-        if %params.<dependencies> {
-            if %params.<dependencies> ~~ Array {
-                %params.<dependencies> = %params.<dependencies>.map(-> $dep {
-                    my ($name, $obj);
-                    if ($dep ~~ Dependency) {
-                        $name = $dep.service_path.split('/').[*-1];
-                        $obj  = $dep;
-                    }
-                    else {
-                        $name = $dep.split('/').[*-1];
-                        $obj  = Dependency.new(service_path => $dep);
-                    }
-                    $name => $obj
-                }).hash;
-            }
-
-            my $deps = {};
-            for %params.<dependencies>.keys -> $name {
-                my $dep = %params.<dependencies>.{$name};
-                $deps.{$name} = $dep.isa(Dependency)
-                    ?? $dep
-                    !! Dependency.new(service => $dep);
-            }
-            %params.<dependencies> = $deps;
+        if my $deps = %params.<dependencies> {
+            # PERL6: type coercions NYI
+            %params.<dependencies> = self._coerce_dependencies($deps);
         }
+
         my $self = callwith(|%params);
 
         # XXX see above
