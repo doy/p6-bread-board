@@ -131,6 +131,10 @@ role HasParameters {
     }
 }
 
+role HasClass {
+    has $.class;
+}
+
 class Dependency does Traversable {
     has Str $.service_path;
     has Service $.service;
@@ -157,8 +161,7 @@ class Dependency does Traversable {
     }
 }
 
-class ConstructorInjection does Service does HasParameters does HasDependencies {
-    has $.class;
+class ConstructorInjection does Service does HasParameters does HasDependencies does HasClass {
     has Str $.constructor_name is rw = 'new';
 
     # PERL6: type coercions NYI
@@ -231,9 +234,8 @@ class Parameters {
     }
 }
 
-class BlockInjection does Service does HasParameters does HasDependencies {
+class BlockInjection does Service does HasParameters does HasDependencies does HasClass {
     has Callable $.block;
-    has $.class;
 
     # PERL6: type coercions NYI
     method new (*%params is copy) {
