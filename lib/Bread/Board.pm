@@ -230,7 +230,7 @@ class Parameters {
 
 class BlockInjection does Service does HasParameters does HasDependencies {
     has Callable $.block;
-    has $.class = Any;
+    has $.class;
 
     # PERL6: type coercions NYI
     method new (*%params is copy) {
