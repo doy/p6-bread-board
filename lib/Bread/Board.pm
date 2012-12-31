@@ -204,7 +204,7 @@ class ConstructorInjection does Service does HasParameters does HasDependencies 
     has Str $.constructor_name is rw = 'new';
 
     method new (*%params is copy) {
-        if my $deps = %params<dependencies> {
+        if %params<dependencies> -> $deps {
             # PERL6: type coercions NYI
             %params<dependencies> = self._coerce_dependencies($deps);
         }
@@ -245,7 +245,7 @@ class BlockInjection does Service does HasParameters does HasDependencies does H
     has Callable $.block;
 
     method new (*%params is copy) {
-        if my $deps = %params<dependencies> {
+        if %params<dependencies> -> $deps {
             # PERL6: type coercions NYI
             %params<dependencies> = self._coerce_dependencies($deps);
         }
