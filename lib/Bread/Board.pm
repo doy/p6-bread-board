@@ -5,6 +5,9 @@ module Bread::Board;
 class Container {...}
 class Dependency {...}
 
+# XXX it'd be nice if this wasn't necessary, but i don't know how to tell # '
+# whether an attribute has been set if that attribute is supposed to hold
+# type objects
 role Lifecycle { }
 
 role Traversable {
